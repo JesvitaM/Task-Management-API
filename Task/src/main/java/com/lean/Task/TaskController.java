@@ -2,6 +2,7 @@ package com.lean.Task;
 
 import com.lean.Task.Repository.TaskRepository;
 import com.lean.Task.model.Task;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +29,7 @@ public class TaskController {
 
     // Save a new task to MongoDB
     @PostMapping
-    public Task createTask(@RequestBody Task task) {
+    public Task createTask(@Valid @RequestBody Task task) {
         return taskRepository.save(task);
     }
 
@@ -64,7 +65,7 @@ public class TaskController {
 
 //    Finds the existing task, update its fields with the data from the request, and save it back to MongoDB.
     @PutMapping("/{id}")
-    public Task updateTask(@PathVariable String id, @RequestBody Task updatedTask) {
+    public Task updateTask(@PathVariable String id, @Valid @RequestBody Task updatedTask) {
         return taskRepository.findById(id)
                 .map(existingtask -> {
                     existingtask.setTitle(updatedTask.getTitle());

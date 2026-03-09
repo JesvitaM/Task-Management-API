@@ -1,5 +1,7 @@
 package com.lean.Task.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +21,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Task {
     @Id
     private String id;
+
+    @NotBlank(message = "Title is mandatory Bro")// the Title cannot be empty
+    @Size(max = 100, message = "Title is too long") // the Title cannot exceed 100 characters and if it does, it will return the message "Title is too long"
     private String title;
+
     private String description;
     private boolean completed;
 }
