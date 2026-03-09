@@ -51,6 +51,10 @@ public class TaskController {
 //        return taskRepository.findById(id).orElse(null);
 //    }
 
+    @GetMapping("/status/{isCompleted}")
+    public List<Task> getTasksByStatus(@PathVariable boolean isCompleted) {
+        return taskRepository.findByCompleted(isCompleted);
+    }
 
     //Delete task by id
     @DeleteMapping("/{id}")

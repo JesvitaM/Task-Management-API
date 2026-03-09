@@ -28,7 +28,8 @@ add the following line to the dependencies block:
 ```groovy
 implementation 'org.springframework.boot:spring-boot-starter-validation'
 ```    
-### Add Rules to the Task Model
+### Validation 
+#### Add Rules to the Task Model
 We use annotations like `@NotBlank` (the string cannot be empty) and `@Size` (limit the length).
 to tell spring what a valid task looks like. 
 If a request doesn't meet these rules, Spring will automatically return a 400 Bad Request response with details about the validation errors.
@@ -49,9 +50,38 @@ For PUT and PATCH
 2. PATCH: We only want to validate the fields that are being updated. 
    - For example, if we're only updating the "completed" status, we don't need to validate the "description" field. 
 
-### Exception Handling
+### Global Exception Handling
 To handle validation errors gracefully, we can create a global exception handler using `@RestControllerAdvice`.
 So in GlobalExceptionHandler.java,
 The annottation @RestControllerAdvice allows us to define a centralized place to handle exceptions across all controllers.
 Its a speciakized version of @Component that is used to handle exceptions in RESTful web services.
 It tells Spring: "Listen to all Controllers in the app. If any of them throw an exception, check this class for a matching `@ExceptionHandler`".
+
+### Custom Queries
+A way to make our repository smarter. Instead of bringing all tasks into Java and filtering them with a for loop, we ask MongoDB to do it.
+
+- **Updating the Repository**:
+    In `TaskRepository`, we can add a method to find tasks based on whether they are finished or not:
+```
+public interface TaskRepository extends MongoRepository<Task, String> {
+    // Spring generates the logic for this automatically!
+    List<Task> findByCompleted(boolean completed);
+}
+```
+**Parsing**: Spring looks at the method name (e.g., findByCompleted).
+
+**Mapping**: It breaks the name into parts: `find` (the action), `By` (the delimiter), and `Completed` (the property in your Task class).
+
+**Translation**: It translates this into a native MongoDB query: `db.tasks.find({ "completed": true })`.
+
+**Execution**: When you call that method, the proxy executes the query and maps the resulting BSON documents back into Java Task objects.
+
+- **The controller Mapping**: 
+To use this, we need an endpoint. 
+Usually, we use `@GetMapping` with a PathVariable so the user can decide what status they want to see (e.g., /api/tasks/status/true).
+````
+@GetMapping("/status/{isCompleted}")
+public List<Task> getTasksByStatus(@PathVariable boolean isCompleted) {
+    return taskRepository.findByCompleted(isCompleted);
+}
+````
