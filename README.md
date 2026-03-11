@@ -85,3 +85,51 @@ public List<Task> getTasksByStatus(@PathVariable boolean isCompleted) {
     return taskRepository.findByCompleted(isCompleted);
 }
 ````
+
+##  Security
+### The Security Filter Chain 
+
+In Spring boot, security doent happen inside your Controller. Instead, it happens in a Filter Chain that sits in front of your controllers.
+When a request comes in, it must pass through various "security checks" (filters) before Spring allows it to reach your code.
+
+The moment you add this dependency, Spring Boot's "auto-configuration" kicks in. It's like a pre-installed security system that activates the moment you plug it in.
+
+1. _Form Login_: All your web endpoints (like /api/tasks) are now protected. If you try to access them in a browser, you'll likely be redirected to a default login page.
+2. _Default User_: Spring creates a default user with the username `user`.
+3. _Generated Password_: It generates a unique password every time the application starts (In console). You can find this in your Console/Terminal log—look for a line that says:
+`Using generated security password: XXXX-XXXX-XXXX`
+
+Or could define in `application.properties` file:
+```spring.security.user.name=admin
+spring.security.user.password=admin123
+```
+
+_Real World_ problem: In a Microservices architecture, you don't want a browser-based login form for every service.
+If "Service A" needs to ask "Service B" for a task list, it can't "type" into a username box.
+
+### The Security Configuration Class
+To customize this behavior, we create our own Security Configuration class that implements `SecurityFilterChain`.
+-- `SecurityConfig.java`
+
+Why did we do this?
+1. **CSRF Disable**: Cross-Site Request Forgery (CSRF) protection is great for websites with forms, but for Stateless APIs (like ours), it usually gets in the way. We disable it so tools like Postman or other Microservices can talk to us easily.
+2. **Granular Rules**: Notice how we made GET requests public? This allows anyone to see the tasks, but if someone tries to POST a new task or DELETE one, the Bouncer will stop them.
+3. **HTTP Basic**: This replaces the "Login Page" with a standard browser popup. It's much easier for testing and for service-to-service communication.
+
+Think of it like a museum:
+- The Gallery (GET requests): Anyone can walk in and look at the paintings. We set this with .requestMatchers(HttpMethod.GET, "/api/tasks/**").permitAll().
+- The Back Office (POST, PUT, DELETE requests): You need a keycard to get in here. We set this with .anyRequest().authenticated().
+
+To get past the 401 error:
+Add an Authorization header in IntelliJ
+````
+POST http://localhost:8080/api/tasks
+Content-Type: application/json
+Authorization: Basic admin password123
+
+{
+  "title": "Learn Spring Security",
+  "description": "Mastering the HTTP Client",
+  "completed": false
+}
+````
