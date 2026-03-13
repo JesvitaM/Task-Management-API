@@ -133,3 +133,17 @@ Authorization: Basic admin password123
   "completed": false
 }
 ````
+
+### JWT - JSON Web Tokens
+In a microservices environment, services often need to talk to each other without sharing a database. 
+A JWT is like a signed passport: Service A can look at the "stamp" (the digital signature) and know it’s valid without calling a central server to check.
+
+`JwtService.java`
+- **Generate Token**: When a user logs in, we create a JWT that includes their username and any relevant claims (like roles). This token is signed with a secret key.
+- **Validate Token**: When a request comes in with a JWT, we check the signature to ensure it hasn’t been tampered with. We also check the token’s expiration time and any claims to determine if the user has the right permissions.
+- **Extract Username**: We can pull the username out of the token to identify who is making the request.
+
+#### What Happens??
+* **The Signature**: We use HMAC (Hash-based Message Authentication Code). If even one character of the token changes, the signature becomes invalid. This is your defense against tampering!
+* **The Claims**: The subject is usually the username. You can also add "claims" like roles (Admin/User), which we’ll use later for your Method Level Security.
+* **Statelessness**: Notice we aren't saving anything to a database here. The token itself holds all the information the server needs to trust the user.
